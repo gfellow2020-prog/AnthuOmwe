@@ -1,0 +1,335 @@
+@extends('layouts.dashboard')
+
+@section('title', 'Lab — ' . $encounter->encounter_number)
+
+@push('styles')
+<style>
+    .field-label  { display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px; }
+    .field-input  { width:100%;padding:9px 13px;font-size:14px;border:1px solid #d1d5db;border-radius:8px;
+                    background:#fff;color:#111827;outline:none;transition:border-color .15s; }
+    .field-input:focus  { border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+    textarea.field-input { resize:vertical;min-height:64px; }
+    select.field-input  { appearance:none;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 10px center;background-size:20px; }
+    .btn-primary  { display:inline-flex;align-items:center;gap:6px;padding:9px 22px;font-size:14px;font-weight:600;background:#2563eb;color:#fff;border-radius:8px;border:none;cursor:pointer; }
+    .btn-primary:hover  { background:#1d4ed8; }
+    .btn-green    { display:inline-flex;align-items:center;gap:6px;padding:9px 22px;font-size:14px;font-weight:600;background:#16a34a;color:#fff;border-radius:8px;border:none;cursor:pointer; }
+    .btn-green:hover    { background:#15803d; }
+    .btn-secondary{ display:inline-flex;align-items:center;gap:6px;padding:9px 20px;font-size:14px;font-weight:600;background:#f3f4f6;color:#374151;border-radius:8px;border:1px solid #d1d5db;cursor:pointer; }
+    .section-title{ font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px; }
+    .detail-row   { display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px; }
+    .detail-row:last-child { border-bottom:none; }
+    .detail-label { flex-shrink:0;width:150px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase; }
+    .result-row   { background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px; }
+</style>
+@endpush
+
+@section('page-header')
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+        <a href="{{ route('lab.queue') }}" class="text-gray-400 hover:text-gray-600 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Lab — {{ $encounter->encounter_number }}</h1>
+            <p class="text-sm text-gray-500 mt-0.5">{{ $encounter->patient->full_name }}</p>
+        </div>
+    </div>
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+        {{ $encounter->current_status->label() }}
+    </span>
+</div>
+@endsection
+
+@section('content')
+
+@if(session('success'))
+<div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm">{{ session('error') }}</div>
+@endif
+@if($errors->any())
+<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm">
+    <ul class="list-disc pl-4 space-y-1">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+</div>
+@endif
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    {{-- ── Left: Work area ─────────────────────────────────────────────── --}}
+    <div class="lg:col-span-2 space-y-6">
+
+        @php $lr = $encounter->labRequest; @endphp
+
+        {{-- Sample collection ------------------------------------------- --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200" x-data="sampleForm()">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.155-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                </div>
+                <h2 class="text-base font-semibold text-gray-900">Sample Collection</h2>
+                @if($lr && $lr->samples->isNotEmpty())
+                <span class="ml-auto text-xs bg-purple-100 text-purple-700 font-semibold px-2 py-0.5 rounded-full">{{ $lr->samples->count() }} collected</span>
+                @endif
+            </div>
+
+            {{-- Existing samples --}}
+            @if($lr && $lr->samples->isNotEmpty())
+            <div class="px-6 pt-4 space-y-2">
+                @foreach($lr->samples as $s)
+                <div class="flex items-center gap-3 px-3 py-2 bg-purple-50 border border-purple-100 rounded-lg text-sm">
+                    <span class="font-semibold text-purple-700">{{ $s->sample_type }}</span>
+                    @if($s->sample_label)<span class="text-gray-500">· {{ $s->sample_label }}</span>@endif
+                    <span class="text-gray-400 ml-auto text-xs">{{ $s->collected_at->format('H:i') }}</span>
+                </div>
+                @endforeach
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('lab.samples', $encounter) }}" class="px-6 py-4 space-y-3">
+                @csrf
+                <template x-for="(sample, index) in samples" :key="index">
+                    <div class="result-row flex gap-3 items-start">
+                        <div class="flex-1">
+                            <label class="field-label">Sample Type</label>
+                            <input type="text" :name="`samples[${index}][sample_type]`" x-model="sample.type"
+                                   class="field-input" placeholder="e.g. Blood, Urine, Stool"/>
+                        </div>
+                        <div class="flex-1">
+                            <label class="field-label">Label</label>
+                            <input type="text" :name="`samples[${index}][sample_label]`" x-model="sample.label"
+                                   class="field-input" placeholder="optional"/>
+                        </div>
+                        <button type="button" @click="samples.splice(index,1)"
+                                class="mt-6 text-red-400 hover:text-red-600 text-lg leading-none">×</button>
+                    </div>
+                </template>
+                <div class="flex gap-3">
+                    <button type="button" @click="samples.push({type:'',label:''})"
+                            class="text-sm text-blue-600 font-semibold hover:underline">+ Add Sample</button>
+                    <button type="submit" class="btn-primary text-xs px-3 py-1.5 ml-auto">Save Samples</button>
+                </div>
+            </form>
+        </div>
+
+        {{-- Test items -------------------------------------------------- --}}
+        @if($lr && $lr->items->isNotEmpty())
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="text-base font-semibold text-gray-900">Ordered Tests</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @foreach($lr->items as $item)
+                <div class="flex items-center justify-between px-6 py-3">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800">{{ $item->test_name }}</p>
+                        @if($item->specimen_type)<p class="text-xs text-gray-500">Specimen: {{ $item->specimen_type }}</p>@endif
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full
+                        {{ $item->status === 'resulted' ? 'bg-green-100 text-green-700' :
+                           ($item->status === 'collected' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600') }}">
+                        {{ ucfirst($item->status) }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Results form ------------------------------------------------ --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200" x-data="resultForm()">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+                <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/>
+                    </svg>
+                </div>
+                <h2 class="text-base font-semibold text-gray-900">Record Results &amp; Complete</h2>
+            </div>
+
+            {{-- Existing results --}}
+            @if($lr && $lr->results->isNotEmpty())
+            <div class="px-6 pt-4 space-y-2">
+                @foreach($lr->results as $res)
+                <div class="result-row text-sm">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        @if($res->labRequestItem)<span class="font-semibold text-gray-800">{{ $res->labRequestItem->test_name }}</span>@endif
+                        @if($res->result_value)<span class="font-semibold text-blue-700 text-base">{{ $res->result_value }}</span>@endif
+                        @if($res->reference_range)<span class="text-gray-500">Ref: {{ $res->reference_range }}</span>@endif
+                        @if($res->interpretation)
+                        <span class="text-xs px-2 py-0.5 rounded-full font-semibold
+                            {{ $res->interpretation === 'normal' ? 'bg-green-100 text-green-700' :
+                               ($res->interpretation === 'critical' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
+                            {{ ucfirst($res->interpretation) }}
+                        </span>
+                        @endif
+                    </div>
+                    @if($res->result_text)<p class="text-gray-600 mt-1">{{ $res->result_text }}</p>@endif
+                </div>
+                @endforeach
+            </div>
+            @endif
+
+            {{-- Complete form with final results --}}
+            <form method="POST" action="{{ route('lab.complete', $encounter) }}" class="px-6 py-4 space-y-3">
+                @csrf
+
+                <template x-for="(row, index) in results" :key="index">
+                    <div class="result-row space-y-3">
+                        @if($lr && $lr->items->isNotEmpty())
+                        <div>
+                            <label class="field-label">Test</label>
+                            <select :name="`results[${index}][lab_request_item_id]`" x-model="row.item_id" class="field-input">
+                                <option value="">— General result —</option>
+                                @foreach($lr?->items ?? [] as $item)
+                                <option value="{{ $item->id }}">{{ $item->test_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @else
+                        <input type="hidden" :name="`results[${index}][lab_request_item_id]`" value="">
+                        @endif
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="field-label">Result Value</label>
+                                <input type="text" :name="`results[${index}][result_value]`" x-model="row.value"
+                                       class="field-input" placeholder="e.g. 12.5 g/dL"/>
+                            </div>
+                            <div>
+                                <label class="field-label">Reference Range</label>
+                                <input type="text" :name="`results[${index}][reference_range]`" x-model="row.range"
+                                       class="field-input" placeholder="e.g. 11.5–16.5"/>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="field-label">Interpretation</label>
+                                <select :name="`results[${index}][interpretation]`" x-model="row.interp" class="field-input">
+                                    <option value="">— Select —</option>
+                                    <option value="normal">Normal</option>
+                                    <option value="abnormal">Abnormal</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="inconclusive">Inconclusive</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="field-label">Remarks</label>
+                                <input type="text" :name="`results[${index}][remarks]`" x-model="row.remarks"
+                                       class="field-input" placeholder="optional"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="field-label">Result Text / Notes</label>
+                            <textarea :name="`results[${index}][result_text]`" x-model="row.text"
+                                      rows="2" class="field-input" placeholder="Narrative or microscopy findings…"></textarea>
+                        </div>
+                        <button type="button" @click="results.splice(index,1)"
+                                class="text-xs text-red-400 hover:text-red-600">Remove this result</button>
+                    </div>
+                </template>
+
+                <button type="button" @click="results.push({item_id:'',value:'',range:'',interp:'',remarks:'',text:''})"
+                        class="text-sm text-blue-600 font-semibold hover:underline">+ Add Result Row</button>
+
+                <div class="pt-3 border-t border-gray-100 space-y-3">
+                    <div>
+                        <label class="field-label">Handover Note to Clinician <span class="font-normal text-gray-400 text-xs">(optional)</span></label>
+                        <textarea name="notes" rows="2" class="field-input"
+                                  placeholder="Anything the reviewing clinician should note…">{{ old('notes') }}</textarea>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button type="submit" class="btn-green">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                            Save Results &amp; Return to Screening Review
+                        </button>
+                        <a href="{{ route('lab.queue') }}" class="btn-secondary">Back</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    {{-- ── Right sidebar ───────────────────────────────────────────────── --}}
+    <div class="space-y-6">
+
+        {{-- Patient card --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-semibold text-gray-700">Patient</h2></div>
+            <div class="px-6 py-4 text-sm space-y-1">
+                <p class="font-semibold text-gray-900">{{ $encounter->patient->full_name }}</p>
+                <p class="text-gray-500">{{ $encounter->patient->patient_id }}</p>
+                <p class="text-gray-500">{{ ucfirst($encounter->patient->gender ?? '—') }}</p>
+                @if($encounter->patient->allergies)
+                <p class="text-red-600 font-medium mt-2">⚠ {{ $encounter->patient->allergies }}</p>
+                @endif
+            </div>
+        </div>
+
+        {{-- Screening summary --}}
+        @if($encounter->screeningRecord)
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-semibold text-gray-700">Screening Summary</h2></div>
+            <div class="px-6 py-4 text-sm space-y-2">
+                @if($encounter->screeningRecord->complaints)
+                <div><span class="font-semibold text-gray-600">Complaints: </span>{{ $encounter->screeningRecord->complaints }}</div>
+                @endif
+                @if($encounter->screeningRecord->provisional_diagnosis)
+                <div><span class="font-semibold text-gray-600">Provisional Dx: </span>{{ $encounter->screeningRecord->provisional_diagnosis }}</div>
+                @endif
+                @if($encounter->screeningRecord->plan)
+                <div><span class="font-semibold text-gray-600">Plan: </span>{{ $encounter->screeningRecord->plan }}</div>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        {{-- Lab request info --}}
+        @if($encounter->labRequest)
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-semibold text-gray-700">Lab Request</h2></div>
+            <div class="px-6 py-4 text-sm space-y-2">
+                <div class="detail-row"><span class="detail-label">Number</span><span class="font-mono font-semibold text-blue-700">{{ $encounter->labRequest->request_number }}</span></div>
+                <div class="detail-row"><span class="detail-label">Priority</span><span>{{ ucfirst($encounter->labRequest->priority_level ?? 'Normal') }}</span></div>
+                <div class="detail-row"><span class="detail-label">Status</span><span>{{ ucfirst($encounter->labRequest->status) }}</span></div>
+                <div class="detail-row"><span class="detail-label">Received</span><span>{{ $encounter->labRequest->requested_at->format('H:i') }}</span></div>
+            </div>
+        </div>
+        @endif
+
+        {{-- Activity --}}
+        @if($encounter->audits->isNotEmpty())
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-100"><h2 class="text-sm font-semibold text-gray-700">Activity</h2></div>
+            <div class="divide-y divide-gray-50">
+                @foreach($encounter->audits->sortByDesc('action_at') as $audit)
+                <div class="px-6 py-3">
+                    <p class="text-xs font-semibold text-gray-700">{{ str_replace('_', ' ', ucfirst($audit->action_name)) }}</p>
+                    <p class="text-xs text-gray-400">{{ $audit->action_at->format('d M H:i') }}</p>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+    </div>
+</div>
+
+@push('scripts')
+<script>
+function sampleForm() {
+    return { samples: [{ type: '', label: '' }] };
+}
+function resultForm() {
+    return { results: [{ item_id: '', value: '', range: '', interp: '', remarks: '', text: '' }] };
+}
+</script>
+@endpush
+
+@endsection
