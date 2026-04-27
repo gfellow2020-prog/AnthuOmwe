@@ -107,6 +107,11 @@ class Encounter extends Model
         return $this->hasOne(PharmacyDispense::class)->latestOfMany();
     }
 
+    public function startupMedications(): HasMany
+    {
+        return $this->hasMany(StartupMedication::class);
+    }
+
     // ─── Convenience helpers ──────────────────────────────────────────────────
 
     public function isLocked(): bool

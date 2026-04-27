@@ -42,6 +42,26 @@ class StartEncounterAction
     public function handle(array $data, int $registrarId): Encounter
     {
         return DB::transaction(function () use ($data, $registrarId): Encounter {
+            $registrationNotes = $data['registration_notes'] ?? null;
+
+            if (($data['create_household'] ?? false)
+                && ! empty($data['payment_plan'])
+                && ! empty($data['payment_mode'])
+                && ! empty($data['payment_amount'])) {
+                $paymentPlan = $data['payment_plan'] === 'annual' ? 'Annual' : 'Monthly';
+                $paymentMode = $data['payment_mode'] === 'mobile_money' ? 'Mobile money' : 'Cash';
+                $paymentLine = sprintf(
+                    'Household payment: %s K%s via %s.',
+                    $paymentPlan,
+                    number_format((int) $data['payment_amount']),
+                    $paymentMode
+                );
+
+                $registrationNotes = trim(implode("\n", array_filter([
+                    $registrationNotes,
+                    $paymentLine,
+                ])));
+            }
 
             // 1. Find or create patient
             ['patient' => $patient, 'was_existing' => $wasExisting] =
@@ -77,7 +97,7 @@ class StartEncounterAction
                 'registrar_id'        => $registrarId,
                 'was_existing_patient'=> $wasExisting,
                 'search_reference'    => $data['search_reference'] ?? null,
-                'registration_notes'  => $data['registration_notes'] ?? null,
+                'registration_notes'  => $registrationNotes,
                 'registered_at'       => now(),
             ]);
 

@@ -25,6 +25,9 @@ class TriageRecord extends Model
         'oxygen_saturation',
         'blood_sugar',
         'pain_scale',
+        'muac',
+        'muac_score',
+        'abdominal_circumference',
         'chief_complaint_brief',
         'startup_interventions_notes',
         'startup_medications_notes',
@@ -40,6 +43,8 @@ class TriageRecord extends Model
         'temperature'        => 'decimal:1',
         'oxygen_saturation'  => 'decimal:1',
         'blood_sugar'        => 'decimal:2',
+        'muac'               => 'decimal:1',
+        'abdominal_circumference' => 'decimal:1',
         'triage_at'          => 'datetime',
         'completed_at'       => 'datetime',
     ];
@@ -81,5 +86,10 @@ class TriageRecord extends Model
             return "{$this->systolic_bp}/{$this->diastolic_bp} mmHg";
         }
         return '—';
+    }
+
+    public function startupMedications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(StartupMedication::class);
     }
 }

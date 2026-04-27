@@ -249,8 +249,114 @@ class PatientsController extends Controller
         ] : null;
 
         $patient = $this->normalizePatient($patientRow, $householdRow ? (array) $householdRow : null);
+        $patientDbId = $patientRow['id'];
 
-        return view('patients.show', compact('patient', 'household', 'error'));
+        return view('patients.show', compact('patient', 'household', 'error', 'patientDbId'));
+    }
+
+    /**
+     * Show the edit form for a patient.
+     */
+    public function edit(string $ref)
+    {
+        $row = DB::table('patients')
+            ->where('patient_id', $ref)
+            ->orWhere('barcode', $ref)
+            ->orWhere('id', is_numeric($ref) ? (int) $ref : 0)
+            ->first();
+
+        if (!$row) {
+            return redirect()->route('patients.index')->withErrors([
+                'patient' => 'Patient not found.',
+            ]);
+        }
+
+        $patient = (array) $row;
+
+        return view('patients.edit', compact('patient'));
+    }
+
+    /**
+     * Update a patient record.
+     */
+    public function update(Request $request, string $ref)
+    {
+        $row = DB::table('patients')
+            ->where('patient_id', $ref)
+            ->orWhere('barcode', $ref)
+            ->orWhere('id', is_numeric($ref) ? (int) $ref : 0)
+            ->first();
+
+        if (!$row) {
+            return redirect()->route('patients.index')->withErrors([
+                'patient' => 'Patient not found.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'full_name'          => 'required|string|max:200',
+            'date_of_birth'      => 'required|date',
+            'gender'             => 'required|in:Male,Female',
+            'nrc_number'         => 'nullable|string|max:50',
+            'country'            => 'nullable|string|max:10',
+            'phone_number'       => 'nullable|string|max:30',
+            'email'              => 'nullable|email|max:150',
+            'other_cellphone'    => 'nullable|string|max:30',
+            'landline'           => 'nullable|string|max:30',
+            'house_number'       => 'nullable|string|max:50',
+            'road_street'        => 'nullable|string|max:100',
+            'area'               => 'nullable|string|max:100',
+            'city_town_village'  => 'nullable|string|max:100',
+            'landmarks'          => 'nullable|string|max:500',
+            'marital_status'     => 'nullable|string|max:30',
+            'spouse_first_name'  => 'nullable|string|max:100',
+            'spouse_surname'     => 'nullable|string|max:100',
+            'home_language'      => 'nullable|string|max:50',
+            'born_in_zambia'     => 'nullable|string|max:10',
+            'province_of_birth'  => 'nullable|string|max:100',
+            'district_of_birth'  => 'nullable|string|max:100',
+            'place_of_birth'     => 'nullable|string|max:100',
+            'occupation'         => 'nullable|string|max:100',
+            'art_number'         => 'nullable|string|max:50',
+            'nupn'               => 'nullable|string|max:50',
+            'blood_group'        => 'nullable|string|max:10',
+            'allergies'          => 'nullable|string|max:500',
+        ]);
+
+        DB::table('patients')
+            ->where('id', $row->id)
+            ->update(array_merge($validated, ['updated_at' => now()]));
+
+        return redirect()
+            ->route('patients.show', ['ref' => $row->patient_id])
+            ->with('success', 'Patient updated successfully.');
+    }
+
+    /**
+     * Show encounter history for a patient.
+     */
+    public function encounters(string $ref)
+    {
+        $row = DB::table('patients')
+            ->where('patient_id', $ref)
+            ->orWhere('barcode', $ref)
+            ->orWhere('id', is_numeric($ref) ? (int) $ref : 0)
+            ->first();
+
+        if (!$row) {
+            return redirect()->route('patients.index')->withErrors([
+                'patient' => 'Patient not found.',
+            ]);
+        }
+
+        $encounters = DB::table('encounters')
+            ->where('patient_id', $row->id)
+            ->orderByDesc('started_at')
+            ->paginate(20);
+
+        $patient = (array) $row;
+
+        return view('patients.encounters', compact('patient', 'encounters'));
     }
 
     /**

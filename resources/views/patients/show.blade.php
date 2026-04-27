@@ -2,27 +2,22 @@
 
 @section('title', 'Patient Details — Anthu Omwe Health Center')
 
-@section('page-header')
-    @php
-        $firstName = $patient['firstName'] ?? $patient['first_name'] ?? $patient['firstname'] ?? '';
-        $lastName  = $patient['lastName'] ?? $patient['last_name'] ?? $patient['lastname'] ?? '';
-        $fullName  = trim($firstName . ' ' . $lastName) ?: ($patient['name'] ?? $patient['fullName'] ?? 'Patient Details');
-    @endphp
-
-    @include('components.page-header', [
-        'title'    => 'Patient Details',
-        'subtitle' => 'Profile, barcode and registration information',
-        'actions'  => '<a href="' . route('patients.index') . '" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg transition">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                          Back to Patients
-                       </a>',
-    ])
+@section('breadcrumbs')
+@php
+    $firstName = $patient['firstName'] ?? $patient['first_name'] ?? $patient['firstname'] ?? '';
+    $lastName  = $patient['lastName'] ?? $patient['last_name'] ?? $patient['lastname'] ?? '';
+    $fullName  = trim($firstName . ' ' . $lastName) ?: ($patient['name'] ?? $patient['fullName'] ?? 'Patient');
+@endphp
+<span class="mx-2">/</span>
+<a href="{{ route('patients.index') }}" class="hover:text-neutral-700 transition">Patients</a>
+<span class="mx-2">/</span>
+<span class="text-neutral-700 dark:text-neutral-200 font-medium">{{ $fullName }}</span>
 @endsection
 
 @section('content')
 
 @if($error)
-    <div class="mb-5 flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
+    <div class="mb-5 flex items-start gap-3 p-4 rounded bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm">
         <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         </svg>
@@ -89,54 +84,85 @@
 {{-- ================================================================
      TOP SUMMARY BAR
      ================================================================ --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-5">
-    <div class="h-1 bg-blue-600"></div>
+<div class="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden mb-5">
+    <div class="h-1 bg-neutral-900 dark:bg-white"></div>
     <div class="px-5 py-4">
         <div class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
             <div>
-                <span class="text-gray-500 dark:text-gray-400">Name:</span>
-                <span class="font-semibold text-gray-900 dark:text-white ml-1">{{ $fullName }}</span>
+                <span class="text-neutral-500">Name:</span>
+                <span class="font-semibold text-neutral-900 dark:text-white ml-1">{{ $fullName }}</span>
             </div>
             <div>
-                <span class="text-gray-500 dark:text-gray-400">DOB:</span>
-                <span class="font-semibold text-gray-900 dark:text-white ml-1">{{ $dobFormatted }}{{ $age ? ' (' . $age . ' yrs)' : '' }}</span>
+                <span class="text-neutral-500">DOB:</span>
+                <span class="font-semibold text-neutral-900 dark:text-white ml-1">{{ $dobFormatted }}{{ $age ? ' (' . $age . ' yrs)' : '' }}</span>
             </div>
             <div>
-                <span class="text-gray-500 dark:text-gray-400">Sex:</span>
-                <span class="font-semibold text-gray-900 dark:text-white ml-1">{{ ucfirst((string)$gender) }}</span>
+                <span class="text-neutral-500">Sex:</span>
+                <span class="font-semibold text-neutral-900 dark:text-white ml-1">{{ ucfirst((string)$gender) }}</span>
             </div>
             <div>
-                <span class="text-gray-500 dark:text-gray-400">Cellphone:</span>
-                <span class="font-semibold text-gray-900 dark:text-white ml-1">{{ $phone }}</span>
+                <span class="text-neutral-500">Cellphone:</span>
+                <span class="font-semibold text-neutral-900 dark:text-white ml-1">{{ $phone }}</span>
             </div>
             <div>
-                <span class="text-gray-500 dark:text-gray-400">NUPN:</span>
-                <span class="font-semibold text-gray-900 dark:text-white ml-1">{{ $nupn }}</span>
+                <span class="text-neutral-500">NUPN:</span>
+                <span class="font-semibold text-neutral-900 dark:text-white ml-1">{{ $nupn }}</span>
             </div>
             <div>
-                <span class="text-gray-500 dark:text-gray-400">NRC:</span>
-                <span class="font-semibold text-gray-900 dark:text-white ml-1 font-mono">{{ $nrc }}</span>
+                <span class="text-neutral-500">NRC:</span>
+                <span class="font-semibold text-neutral-900 dark:text-white ml-1 font-mono">{{ $nrc }}</span>
             </div>
             @if($householdName !== '—')
             <div>
-                <span class="text-gray-500 dark:text-gray-400">Household:</span>
+                <span class="text-neutral-500">Household:</span>
                 @if($householdRef)
-                    <a href="{{ route('households.show', ['ref' => $householdRef]) }}" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline ml-1">{{ $householdName }}</a>
+                    <a href="{{ route('households.show', ['ref' => $householdRef]) }}" class="font-semibold text-neutral-700 dark:text-neutral-300 hover:underline ml-1">{{ $householdName }}</a>
                 @else
-                    <span class="font-semibold text-gray-900 dark:text-white ml-1">{{ $householdName }}</span>
+                    <span class="font-semibold text-neutral-900 dark:text-white ml-1">{{ $householdName }}</span>
                 @endif
             </div>
             @endif
         </div>
         {{-- Action buttons --}}
         <div class="mt-3 flex flex-wrap gap-2">
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition">Edit Profile</button>
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">Admission</button>
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">Appointment</button>
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">Assign Queue</button>
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">Historical Visit</button>
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">Binding</button>
-            <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition">Attend to Patient</button>
+            <a href="{{ route('patients.edit', ['ref' => $pid]) }}" class="px-3 py-1.5 text-xs font-medium rounded bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 transition">Edit Profile</a>
+
+            <form method="POST" action="{{ route('encounters.start') }}" class="inline">
+                @csrf
+                <input type="hidden" name="patient_id" value="{{ $patientDbId }}">
+                <input type="hidden" name="visit_type" value="admission">
+                <button type="submit" class="px-3 py-1.5 text-xs font-medium rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 transition">Admission</button>
+            </form>
+
+            <form method="POST" action="{{ route('encounters.start') }}" class="inline">
+                @csrf
+                <input type="hidden" name="patient_id" value="{{ $patientDbId }}">
+                <input type="hidden" name="visit_type" value="appointment">
+                <button type="submit" class="px-3 py-1.5 text-xs font-medium rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 transition">Appointment</button>
+            </form>
+
+            <form method="POST" action="{{ route('encounters.start') }}" class="inline">
+                @csrf
+                <input type="hidden" name="patient_id" value="{{ $patientDbId }}">
+                <input type="hidden" name="visit_type" value="queue">
+                <button type="submit" class="px-3 py-1.5 text-xs font-medium rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 transition">Assign Queue</button>
+            </form>
+
+            <a href="{{ route('patients.encounters', ['ref' => $pid]) }}" class="px-3 py-1.5 text-xs font-medium rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 transition">Historical Visit</a>
+
+            <form method="POST" action="{{ route('encounters.start') }}" class="inline">
+                @csrf
+                <input type="hidden" name="patient_id" value="{{ $patientDbId }}">
+                <input type="hidden" name="visit_type" value="binding">
+                <button type="submit" class="px-3 py-1.5 text-xs font-medium rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-200 transition">Binding</button>
+            </form>
+
+            <form method="POST" action="{{ route('encounters.start') }}" class="inline">
+                @csrf
+                <input type="hidden" name="patient_id" value="{{ $patientDbId }}">
+                <input type="hidden" name="visit_type" value="walk-in">
+                <button type="submit" class="px-3 py-1.5 text-xs font-medium rounded bg-neutral-700 hover:bg-neutral-600 dark:bg-neutral-300 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 transition">Attend to Patient</button>
+            </form>
         </div>
     </div>
 </div>
@@ -144,101 +170,101 @@
 {{-- ================================================================
      BASIC INFO
      ================================================================ --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-5">
-    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Basic Info</h3>
-        <button class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Edit</button>
+<div class="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden mb-5">
+    <div class="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Basic Info</h3>
+        <button class="text-xs text-neutral-600 dark:text-neutral-400 hover:underline font-medium">Edit</button>
     </div>
     <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-4 gap-x-6">
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Full Name</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $fullName }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Sex</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ ucfirst((string)$gender) }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Date of Birth</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $dobFormatted }}{{ $age ? ' (' . $age . ' yrs)' : '' }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Country</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $country }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">NRC Number</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5 font-mono">{{ $nrc }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">NUPN</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5 font-mono">{{ $nupn }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Registered on</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $regFormatted }}</p></div>
+        <div><p class="text-xs text-neutral-500">Full Name</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $fullName }}</p></div>
+        <div><p class="text-xs text-neutral-500">Sex</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ ucfirst((string)$gender) }}</p></div>
+        <div><p class="text-xs text-neutral-500">Date of Birth</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $dobFormatted }}{{ $age ? ' (' . $age . ' yrs)' : '' }}</p></div>
+        <div><p class="text-xs text-neutral-500">Country</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $country }}</p></div>
+        <div><p class="text-xs text-neutral-500">NRC Number</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5 font-mono">{{ $nrc }}</p></div>
+        <div><p class="text-xs text-neutral-500">NUPN</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5 font-mono">{{ $nupn }}</p></div>
+        <div><p class="text-xs text-neutral-500">Registered on</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $regFormatted }}</p></div>
     </div>
 </div>
 
 {{-- ================================================================
      CONTACT INFORMATION
      ================================================================ --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-5">
-    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Contact Information</h3>
-        <button class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Edit</button>
+<div class="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden mb-5">
+    <div class="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Contact Information</h3>
+        <button class="text-xs text-neutral-600 dark:text-neutral-400 hover:underline font-medium">Edit</button>
     </div>
     <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-4 gap-x-6">
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Cellphone Number</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $phone }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Other Cellphone Number</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $otherCell }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Landline Number</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $landline }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Email</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $email }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">House Number</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $houseNo }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Road / Street</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $roadStreet }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Area</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $area }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">City / Town / Village</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $cityTown }}</p></div>
-        <div class="col-span-2"><p class="text-xs text-gray-500 dark:text-gray-400">Landmarks & Direction</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $landmarks }}</p></div>
+        <div><p class="text-xs text-neutral-500">Cellphone Number</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $phone }}</p></div>
+        <div><p class="text-xs text-neutral-500">Other Cellphone Number</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $otherCell }}</p></div>
+        <div><p class="text-xs text-neutral-500">Landline Number</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $landline }}</p></div>
+        <div><p class="text-xs text-neutral-500">Email</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $email }}</p></div>
+        <div><p class="text-xs text-neutral-500">House Number</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $houseNo }}</p></div>
+        <div><p class="text-xs text-neutral-500">Road / Street</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $roadStreet }}</p></div>
+        <div><p class="text-xs text-neutral-500">Area</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $area }}</p></div>
+        <div><p class="text-xs text-neutral-500">City / Town / Village</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $cityTown }}</p></div>
+        <div class="col-span-2"><p class="text-xs text-neutral-500">Landmarks & Direction</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $landmarks }}</p></div>
     </div>
 </div>
 
 {{-- ================================================================
      MARITAL STATUS / SPOUSE DETAILS
      ================================================================ --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-5">
-    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Marital Status / Spouse Details</h3>
-        <button class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Edit</button>
+<div class="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden mb-5">
+    <div class="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Marital Status / Spouse Details</h3>
+        <button class="text-xs text-neutral-600 dark:text-neutral-400 hover:underline font-medium">Edit</button>
     </div>
     <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6">
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Marital Status</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ ucfirst((string)$marital) }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Spouse First Name</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $spouseFirst }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Spouse Surname</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $spouseSur }}</p></div>
+        <div><p class="text-xs text-neutral-500">Marital Status</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ ucfirst((string)$marital) }}</p></div>
+        <div><p class="text-xs text-neutral-500">Spouse First Name</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $spouseFirst }}</p></div>
+        <div><p class="text-xs text-neutral-500">Spouse Surname</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $spouseSur }}</p></div>
     </div>
 </div>
 
 {{-- ================================================================
      PLACE OF BIRTH
      ================================================================ --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-5">
-    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Place of Birth</h3>
-        <button class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Edit</button>
+<div class="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden mb-5">
+    <div class="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Place of Birth</h3>
+        <button class="text-xs text-neutral-600 dark:text-neutral-400 hover:underline font-medium">Edit</button>
     </div>
     <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-4 gap-x-6">
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Home Language</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $homeLang }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Born in Zambia</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ ucfirst((string)$bornZambia) }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Province of Birth</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $provBirth }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">District of Birth</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $distBirth }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Place of Birth</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $placeBirth }}</p></div>
+        <div><p class="text-xs text-neutral-500">Home Language</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $homeLang }}</p></div>
+        <div><p class="text-xs text-neutral-500">Born in Zambia</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ ucfirst((string)$bornZambia) }}</p></div>
+        <div><p class="text-xs text-neutral-500">Province of Birth</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $provBirth }}</p></div>
+        <div><p class="text-xs text-neutral-500">District of Birth</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $distBirth }}</p></div>
+        <div><p class="text-xs text-neutral-500">Place of Birth</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $placeBirth }}</p></div>
     </div>
 </div>
 
 {{-- ================================================================
      EDUCATION & EMPLOYMENT
      ================================================================ --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-5">
-    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Education & Employment</h3>
-        <button class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Edit</button>
+<div class="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden mb-5">
+    <div class="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Education & Employment</h3>
+        <button class="text-xs text-neutral-600 dark:text-neutral-400 hover:underline font-medium">Edit</button>
     </div>
     <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6">
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Occupation</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ ucfirst((string)$occupation) }}</p></div>
+        <div><p class="text-xs text-neutral-500">Occupation</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ ucfirst((string)$occupation) }}</p></div>
     </div>
 </div>
 
 {{-- ================================================================
      BIOMETRICS
      ================================================================ --}}
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-5">
-    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Biometrics</h3>
-        <button class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">Edit</button>
+<div class="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden mb-5">
+    <div class="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Biometrics</h3>
+        <button class="text-xs text-neutral-600 dark:text-neutral-400 hover:underline font-medium">Edit</button>
     </div>
     <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-4 gap-x-6">
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">ART Number</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5 font-mono">{{ $artNumber }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">NUPN</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5 font-mono">{{ $nupn }}</p></div>
-        <div><p class="text-xs text-gray-500 dark:text-gray-400">Blood Group</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $bloodGroup }}</p></div>
-        <div class="col-span-2"><p class="text-xs text-gray-500 dark:text-gray-400">Allergies</p><p class="text-sm font-medium text-gray-900 dark:text-white mt-0.5">{{ $allergies }}</p></div>
+        <div><p class="text-xs text-neutral-500">ART Number</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5 font-mono">{{ $artNumber }}</p></div>
+        <div><p class="text-xs text-neutral-500">NUPN</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5 font-mono">{{ $nupn }}</p></div>
+        <div><p class="text-xs text-neutral-500">Blood Group</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $bloodGroup }}</p></div>
+        <div class="col-span-2"><p class="text-xs text-neutral-500">Allergies</p><p class="text-sm font-medium text-neutral-900 dark:text-white mt-0.5">{{ $allergies }}</p></div>
     </div>
 </div>
 
@@ -246,10 +272,10 @@
      BARCODE SECTION
      ================================================================ --}}
 @if($barcode !== '—' && $barcode !== '')
-<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-5">
-    <div class="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Patient Barcode</h3>
-        <button onclick="printBarcode()" class="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium">
+<div class="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden mb-5">
+    <div class="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Patient Barcode</h3>
+        <button onclick="printBarcode()" class="inline-flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:underline font-medium">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
             </svg>
@@ -268,7 +294,7 @@
 
 {{-- Finish / Back --}}
 <div class="flex justify-end mb-5">
-    <a href="{{ route('patients.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition shadow-sm">
+    <a href="{{ route('patients.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-sm font-medium rounded transition">
         Finish
     </a>
 </div>

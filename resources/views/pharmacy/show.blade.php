@@ -8,11 +8,11 @@
     .card-hd { padding:1rem 1.5rem;border-bottom:1px solid #f3f4f6;font-weight:600;font-size:.9rem;color:#111827; }
     .card-bd { padding:1.25rem 1.5rem; }
     .badge-locked  { display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:9999px;font-size:12px;font-weight:600; }
-    .badge-open    { display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:9999px;font-size:12px;font-weight:600; }
-    .btn-primary   { display:inline-flex;align-items:center;gap:6px;padding:9px 20px;font-size:13px;font-weight:600;background:#2563eb;color:#fff;border-radius:8px;border:none;cursor:pointer; }
-    .btn-primary:hover   { background:#1d4ed8; }
-    .btn-success   { display:inline-flex;align-items:center;gap:6px;padding:9px 20px;font-size:13px;font-weight:600;background:#16a34a;color:#fff;border-radius:8px;border:none;cursor:pointer; }
-    .btn-success:hover   { background:#15803d; }
+    .badge-open    { display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:#f5f5f5;color:#404040;border:1px solid #d4d4d4;border-radius:9999px;font-size:12px;font-weight:600; }
+    .btn-primary   { display:inline-flex;align-items:center;gap:6px;padding:9px 20px;font-size:13px;font-weight:600;background:#171717;color:#fff;border-radius:8px;border:none;cursor:pointer; }
+    .btn-primary:hover   { background:#262626; }
+    .btn-success   { display:inline-flex;align-items:center;gap:6px;padding:9px 20px;font-size:13px;font-weight:600;background:#404040;color:#fff;border-radius:8px;border:none;cursor:pointer; }
+    .btn-success:hover   { background:#525252; }
     .btn-danger    { display:inline-flex;align-items:center;gap:6px;padding:9px 20px;font-size:13px;font-weight:600;background:#dc2626;color:#fff;border-radius:8px;border:none;cursor:pointer; }
     .btn-danger:hover    { background:#b91c1c; }
     table { width:100%;border-collapse:collapse; }
@@ -23,31 +23,21 @@
 </style>
 @endpush
 
-@section('page-header')
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-xl font-bold text-gray-900">{{ $encounter->patient->full_name }}</h1>
-        <p class="text-xs text-gray-500 mt-0.5">{{ $encounter->encounter_number }} &bull; Pharmacy Stage</p>
-    </div>
-    <div class="flex items-center gap-3">
-        @if($encounter->is_locked)
-            <span class="badge-locked">&#128274; Closed &amp; Locked</span>
-        @else
-            <span class="badge-open">&#9679; Open</span>
-        @endif
-        <a href="{{ route('pharmacy.queue') }}" class="text-sm text-blue-600 hover:underline">&#8592; Queue</a>
-    </div>
-</div>
+@section('breadcrumbs')
+<span class="mx-2">/</span>
+<a href="{{ route('pharmacy.queue') }}" class="hover:text-neutral-700 transition">Pharmacy</a>
+<span class="mx-2">/</span>
+<span class="text-neutral-700 dark:text-neutral-200 font-medium">{{ $encounter->encounter_number }}</span>
 @endsection
 
 @section('content')
 
 @if(session('success'))
-<div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm">{{ session('success') }}</div>
+<div class="mb-4 px-4 py-3 bg-neutral-100 border border-neutral-300 text-neutral-800 rounded-lg text-sm">{{ session('success') }}</div>
 @endif
 
 @if($errors->any())
-<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+<div class="mb-4 px-4 py-3 bg-neutral-900 border border-neutral-700 text-white rounded-lg text-sm">
     <ul class="list-disc list-inside space-y-1">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
 </div>
 @endif
@@ -105,7 +95,7 @@
             <div class="mb-3">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-xs font-semibold text-gray-600">Items Dispensed</span>
-                    <button type="button" @click="addRow()" class="text-xs text-blue-600 hover:underline">+ Add drug</button>
+                    <button type="button" @click="addRow()" class="text-xs text-neutral-600 hover:underline">+ Add drug</button>
                 </div>
                 <table>
                     <thead>
@@ -121,7 +111,7 @@
                                 <td><input type="text" :name="`items[${i}][batch_no]`" x-model="row.batch_no" placeholder="Optional"></td>
                                 <td><input type="text" :name="`items[${i}][instructions]`" x-model="row.instructions" placeholder="Optional"></td>
                                 <td>
-                                    <button type="button" @click="rows.splice(i,1)" class="text-red-500 text-xs hover:underline" x-show="rows.length > 1">Remove</button>
+                                    <button type="button" @click="rows.splice(i,1)" class="text-neutral-600 text-xs hover:underline" x-show="rows.length > 1">Remove</button>
                                 </td>
                             </tr>
                         </template>

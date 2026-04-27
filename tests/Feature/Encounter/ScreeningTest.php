@@ -133,6 +133,60 @@ class ScreeningTest extends TestCase
         ]);
     }
 
+    public function test_screening_form_page_loads_for_in_progress_encounter(): void
+    {
+        $clinician = $this->actingAsClinician();
+        $encounter = $this->makeEncounterAtScreeningInProgress($clinician);
+
+        $response = $this->get(route('screening.show', $encounter));
+
+        $response->assertOk();
+        $response->assertSee('Passed Screening Review', false);
+        $response->assertSee('Complaints & Histories', false);
+    }
+
+    public function test_screening_form_submits_smartcare_fields_successfully(): void
+    {
+        $clinician = $this->actingAsClinician();
+        $encounter = $this->makeEncounterAtScreeningInProgress($clinician);
+
+        $response = $this->post(route('screening.complete', $encounter), [
+            'complaints'                    => 'Headache, mild fever and poor appetite',
+            'tb_symptoms'                   => ['fever', 'fatigue'],
+            'review_of_systems'             => 'No chest pain. No shortness of breath.',
+            'history_of_presenting_illness' => 'Symptoms started 2 days ago.',
+            'past_medical_history'          => 'No chronic medical illnesses.',
+            'medication_history'            => 'Paracetamol taken at home.',
+            'allergy_history'               => 'None known.',
+            'chronic_conditions'            => 'None',
+            'family_history'                => 'Non-contributory',
+            'social_history'                => 'Lives with family, non-smoker',
+            'birth_weight'                  => 3.2,
+            'birth_outcome'                 => 'Live birth',
+            'birth_notes'                   => 'No perinatal complications',
+            'immunization_history'          => '[{"vaccine":"BCG","date":"2020-01-01"}]',
+            'feeding_code'                  => 'Exclusive breastfeeding',
+            'feeding_comments'              => 'Appropriate for age',
+            'development_history'           => '[{"key":"head_holding","achieved":"3","unit":"Months"}]',
+            'physical_examination'          => 'Alert, hydrated, no respiratory distress',
+            'clinical_findings'             => 'Mild pyrexia',
+            'provisional_diagnosis'         => 'Viral syndrome',
+            'final_diagnosis'               => 'Upper respiratory tract infection',
+            'assessment_notes'              => 'Stable for outpatient management',
+            'treatment_plan'                => 'Symptomatic treatment and hydration',
+            'plan'                          => 'Follow-up in 3 days if not improved',
+            'lab_requested'                 => false,
+        ]);
+
+        $response->assertRedirect(route('screening.queue'));
+
+        $record = ScreeningRecord::where('encounter_id', $encounter->id)->first();
+        $this->assertNotNull($record);
+        $this->assertSame('Upper respiratory tract infection', $record->final_diagnosis);
+        $this->assertSame('Exclusive breastfeeding', $record->feeding_code);
+        $this->assertSame(['fever', 'fatigue'], $record->tb_symptoms);
+    }
+
     // ─── 4. Encounter can be queued to lab ────────────────────────────────────
 
     public function test_encounter_can_be_queued_to_lab(): void

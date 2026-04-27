@@ -26,6 +26,9 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $this->call(MedicationsSeeder::class);
+        $this->call(VillagesSeeder::class);
+
         if (is_file(base_path('TDLTS-Patient-Data.xlsx'))) {
             $this->call(TdltsWorkbookSeeder::class);
         }

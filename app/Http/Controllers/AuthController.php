@@ -108,6 +108,23 @@ class AuthController extends Controller
             ->limit(10)
             ->get();
 
+        $trendStart = now()->subDays(6)->startOfDay();
+        $trendRows = DB::table('encounters')
+            ->whereNull('deleted_at')
+            ->whereBetween('started_at', [$trendStart, now()])
+            ->selectRaw('DATE(started_at) as encounter_date, count(*) as total')
+            ->groupBy('encounter_date')
+            ->pluck('total', 'encounter_date');
+
+        $encounterTrendLabels = [];
+        $encounterTrendValues = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $day = now()->subDays($i);
+            $dayKey = $day->toDateString();
+            $encounterTrendLabels[] = $day->format('D');
+            $encounterTrendValues[] = (int) ($trendRows[$dayKey] ?? 0);
+        }
+
         return view('auth.dashboard', compact(
             'totalPatients',
             'totalHouseholds',
@@ -120,7 +137,9 @@ class AuthController extends Controller
             'totalEncounters',
             'activeEncounters',
             'completedEncounters',
-            'recentEncounters'
+            'recentEncounters',
+            'encounterTrendLabels',
+            'encounterTrendValues'
         ));
     }
 

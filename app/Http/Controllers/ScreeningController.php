@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Encounter\CreatePrescriptionAction;
 use App\Actions\Encounter\QueueEncounterToLabAction;
 use App\Actions\Encounter\QueueEncounterToPharmacyFromScreeningAction;
 use App\Actions\Encounter\ReceiveScreeningQueueAction;
@@ -11,6 +12,7 @@ use App\Enums\EncounterStatus;
 use App\Http\Requests\ScreeningRequest;
 use App\Models\Encounter;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
 class ScreeningController extends Controller
@@ -18,6 +20,7 @@ class ScreeningController extends Controller
     public function __construct(
         private readonly ReceiveScreeningQueueAction               $receiveAction,
         private readonly RecordInitialScreeningAction              $recordAction,
+        private readonly CreatePrescriptionAction                  $prescriptionAction,
         private readonly QueueEncounterToLabAction                 $queueToLabAction,
         private readonly QueueEncounterToPharmacyFromScreeningAction $queueToPharmacyAction,
     ) {}
@@ -65,12 +68,33 @@ class ScreeningController extends Controller
         $encounter->load([
             'patient',
             'triageRecord',
+            'startupMedications',
             'screeningRecord.staffAssignments.user',
+            'prescription.items',
+            'prescription.prescribedBy',
             'stageLogs',
             'audits.actionBy',
         ]);
 
-        return view('screening.show', compact('encounter'));
+        // Previous encounters for the same patient (excluding current)
+        $pastEncounters = Encounter::where('patient_id', $encounter->patient_id)
+            ->where('id', '!=', $encounter->id)
+            ->with(['triageRecord', 'screeningRecord', 'startupMedications'])
+            ->orderByDesc('started_at')
+            ->get();
+
+        $icd11Path = resource_path('data/icd11-library.txt');
+        $icd11Library = [];
+
+        if (File::exists($icd11Path)) {
+            $icd11Library = collect(File::lines($icd11Path))
+                ->map(fn (string $line) => trim(ltrim($line, "\xEF\xBB\xBF")))
+                ->filter(fn (string $line) => $line !== '')
+                ->values()
+                ->all();
+        }
+
+        return view('screening.show', compact('encounter', 'pastEncounters', 'icd11Library'));
     }
 
     /**
@@ -82,11 +106,28 @@ class ScreeningController extends Controller
         $data = $request->validated();
 
         // Always save / refresh the screening record first
-        $this->recordAction->handle(
+        $screeningRecord = $this->recordAction->handle(
             encounter:   $encounter,
             data:        $data,
             clinicianId: auth()->id(),
         );
+
+        // Save prescription items if submitted
+        $prescriptionItems = [];
+        if (!empty($data['prescriptions'])) {
+            $decoded = json_decode($data['prescriptions'], true);
+            if (is_array($decoded) && count($decoded) > 0) {
+                $prescriptionItems = $decoded;
+            }
+        }
+        if (count($prescriptionItems) > 0) {
+            $this->prescriptionAction->handle(
+                encounter:       $encounter,
+                data:            ['notes' => null, 'items' => $prescriptionItems],
+                prescribedById:  auth()->id(),
+                screeningRecord: $screeningRecord,
+            );
+        }
 
         $encounter->refresh();
         $labRequested = (bool) ($data['lab_requested'] ?? false);

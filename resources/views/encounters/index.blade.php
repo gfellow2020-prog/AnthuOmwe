@@ -2,47 +2,31 @@
 
 @section('title', 'All Encounters')
 
-@push('styles')
-<style>
-    .badge { display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:600; }
-    .badge-completed { background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0; }
-    .badge-locked    { background:#fef2f2;color:#991b1b;border:1px solid #fecaca; }
-    .badge-progress  { background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe; }
-    .badge-queued    { background:#fefce8;color:#854d0e;border:1px solid #fef08a; }
-    .badge-default   { background:#f9fafb;color:#374151;border:1px solid #e5e7eb; }
-</style>
-@endpush
-
-@section('page-header')
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Encounters</h1>
-        <p class="text-sm text-gray-500 mt-0.5">All patient visits</p>
-    </div>
-    <div class="text-sm text-gray-500">{{ now()->format('D, d M Y') }}</div>
-</div>
+@section('breadcrumbs')
+<span class="mx-2">/</span>
+<span class="text-neutral-700 dark:text-neutral-200 font-medium">All Encounters</span>
 @endsection
 
 @section('content')
 
-<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+<div class="bg-white dark:bg-neutral-900 rounded border border-neutral-300 dark:border-neutral-700 overflow-hidden">
     <table class="w-full text-sm">
         <thead>
-            <tr class="bg-gray-50 border-b border-gray-200">
-                <th class="px-5 py-3 text-left font-semibold text-gray-600">Encounter #</th>
-                <th class="px-5 py-3 text-left font-semibold text-gray-600">Patient</th>
-                <th class="px-5 py-3 text-left font-semibold text-gray-600">Stage</th>
-                <th class="px-5 py-3 text-left font-semibold text-gray-600">Status</th>
-                <th class="px-5 py-3 text-left font-semibold text-gray-600">Started</th>
-                <th class="px-5 py-3 text-left font-semibold text-gray-600">Started By</th>
+            <tr class="bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+                <th class="px-5 py-3 text-left font-semibold text-neutral-600 dark:text-neutral-400">Encounter #</th>
+                <th class="px-5 py-3 text-left font-semibold text-neutral-600 dark:text-neutral-400">Patient</th>
+                <th class="px-5 py-3 text-left font-semibold text-neutral-600 dark:text-neutral-400">Stage</th>
+                <th class="px-5 py-3 text-left font-semibold text-neutral-600 dark:text-neutral-400">Status</th>
+                <th class="px-5 py-3 text-left font-semibold text-neutral-600 dark:text-neutral-400">Started</th>
+                <th class="px-5 py-3 text-left font-semibold text-neutral-600 dark:text-neutral-400">Started By</th>
                 <th class="px-5 py-3"></th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
             @forelse($encounters as $enc)
-            <tr class="hover:bg-gray-50 transition">
-                <td class="px-5 py-3 font-mono text-xs text-gray-700">{{ $enc->encounter_number }}</td>
-                <td class="px-5 py-3 font-medium text-gray-900">{{ $enc->patient->full_name }}</td>
+            <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
+                <td class="px-5 py-3 font-mono text-xs text-neutral-700 dark:text-neutral-300">{{ $enc->encounter_number }}</td>
+                <td class="px-5 py-3 font-medium text-neutral-900 dark:text-neutral-100">{{ $enc->patient->full_name }}</td>
                 <td class="px-5 py-3">
                     @php
                         $stageVal = $enc->current_stage?->value ?? 'unknown';
@@ -70,10 +54,10 @@
                     @endphp
                     <span class="badge {{ $statusBadge }}">{{ ucfirst(str_replace('_', ' ', $statusVal)) }}</span>
                 </td>
-                <td class="px-5 py-3 text-gray-500 text-xs">{{ $enc->started_at?->format('d M Y H:i') }}</td>
-                <td class="px-5 py-3 text-gray-600 text-xs">{{ $enc->startedBy?->name ?? '—' }}</td>
+                <td class="px-5 py-3 text-neutral-500 text-xs">{{ $enc->started_at?->format('d M Y H:i') }}</td>
+                <td class="px-5 py-3 text-neutral-600 dark:text-neutral-400 text-xs">{{ $enc->startedBy?->name ?? '—' }}</td>
                 <td class="px-5 py-3 text-right">
-                    <a href="{{ route('encounters.show', $enc) }}" class="text-xs text-blue-600 hover:underline font-medium">View Profile</a>
+                    <a href="{{ route('encounters.show', $enc) }}" class="text-xs text-neutral-900 dark:text-neutral-100 hover:underline font-medium">View Profile</a>
                 </td>
             </tr>
             @empty

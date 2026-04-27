@@ -12,9 +12,9 @@
     .kv-item label{ display:block;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em; }
     .kv-item span { display:block;font-size:13px;color:#111827;margin-top:2px; }
     .badge        { display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:600; }
-    .badge-green  { background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0; }
-    .badge-blue   { background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe; }
-    .badge-yellow { background:#fefce8;color:#854d0e;border:1px solid #fef08a; }
+    .badge-green  { background:#f5f5f5;color:#404040;border:1px solid #d4d4d4; }
+    .badge-blue   { background:#f5f5f5;color:#404040;border:1px solid #d4d4d4; }
+    .badge-yellow { background:#f5f5f5;color:#404040;border:1px solid #d4d4d4; }
     .badge-red    { background:#fef2f2;color:#991b1b;border:1px solid #fecaca; }
     .badge-gray   { background:#f9fafb;color:#374151;border:1px solid #e5e7eb; }
     table         { width:100%;border-collapse:collapse; }
@@ -26,21 +26,11 @@
 </style>
 @endpush
 
-@section('page-header')
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <div class="flex items-center gap-3 mb-1">
-            <h1 class="text-xl font-bold text-gray-900">{{ $encounter->patient->full_name }}</h1>
-            @if($encounter->is_locked)
-                <span class="badge badge-red">&#128274; Locked</span>
-            @else
-                <span class="badge badge-blue">&#9679; Open</span>
-            @endif
-        </div>
-        <p class="text-xs text-gray-500">{{ $encounter->encounter_number }} &bull; {{ ucfirst($encounter->visit_type ?? 'Visit') }} &bull; Started {{ $encounter->started_at?->format('d M Y H:i') }}</p>
-    </div>
-    <a href="{{ route('encounters.index') }}" class="text-sm text-blue-600 hover:underline">&#8592; All Encounters</a>
-</div>
+@section('breadcrumbs')
+<span class="mx-2">/</span>
+<a href="{{ route('encounters.index') }}" class="hover:text-neutral-700 transition">Encounters</a>
+<span class="mx-2">/</span>
+<span class="text-neutral-700 dark:text-neutral-200 font-medium">{{ $encounter->encounter_number }}</span>
 @endsection
 
 @section('content')
@@ -72,7 +62,7 @@
 {{-- ── 2. PATIENT DEMOGRAPHICS ──────────────────────────────────────────── --}}
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-blue-100">&#128100;</div>
+        <div class="stage-icon bg-neutral-100">&#128100;</div>
         <span class="section-title">Patient Demographics</span>
     </div>
     <div class="section-bd">
@@ -91,7 +81,7 @@
 @if($encounter->registrationRecord)
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-purple-100">&#128221;</div>
+        <div class="stage-icon bg-neutral-100">&#128221;</div>
         <span class="section-title">Registration</span>
     </div>
     <div class="section-bd">
@@ -112,7 +102,7 @@
 @php $t = $encounter->triageRecord; @endphp
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-yellow-100">&#129760;</div>
+        <div class="stage-icon bg-neutral-100">&#129760;</div>
         <span class="section-title">Triage</span>
     </div>
     <div class="section-bd">
@@ -144,7 +134,7 @@
 @php $sr = $encounter->screeningRecord; @endphp
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-green-100">&#128203;</div>
+        <div class="stage-icon bg-neutral-100">&#128203;</div>
         <span class="section-title">Initial Screening</span>
         <span class="ml-2 badge badge-blue">{{ $sr->screening_type }}</span>
     </div>
@@ -214,7 +204,7 @@
                     <td class="font-medium">{{ $r->result_value ?? $r->result_text ?? '—' }}</td>
                     <td>
                         @if($r->interpretation)
-                        <span class="pill {{ $r->isAbnormal() ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' }}">{{ $r->interpretation }}</span>
+                        <span class="pill {{ $r->isAbnormal() ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-700' }}">{{ $r->interpretation }}</span>
                         @else —@endif
                     </td>
                     <td>{{ $r->result_status }}</td>
@@ -233,7 +223,7 @@
 @php $rv = $encounter->screeningReviewRecord; @endphp
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-teal-100">&#128203;</div>
+        <div class="stage-icon bg-neutral-200">&#128203;</div>
         <span class="section-title">Screening Review (Post-Lab)</span>
         <span class="ml-2 badge badge-green">{{ $rv->screening_type }}</span>
     </div>
@@ -260,7 +250,7 @@
 @php $rx = $encounter->prescription; @endphp
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-indigo-100">&#128138;</div>
+        <div class="stage-icon bg-neutral-100">&#128138;</div>
         <span class="section-title">Prescription — {{ $rx->prescription_number }}</span>
         <span class="ml-2 badge badge-{{ $rx->isDispensed() ? 'green' : ($rx->isActive() ? 'blue' : 'gray') }}">{{ $rx->status }}</span>
     </div>
@@ -295,7 +285,7 @@
 @php $d = $encounter->dispense; @endphp
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-orange-100">&#128138;</div>
+        <div class="stage-icon bg-neutral-100">&#128138;</div>
         <span class="section-title">Dispensing Record</span>
         <span class="ml-2 badge badge-green">dispensed</span>
     </div>
@@ -329,7 +319,7 @@
 {{-- ── 10. QUEUE TRANSITION TIMELINE ───────────────────────────────────── --}}
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-blue-100">&#8594;</div>
+        <div class="stage-icon bg-neutral-100">&#8594;</div>
         <span class="section-title">Queue Transitions</span>
         <span class="ml-auto badge badge-gray">{{ $encounter->queueTransitions->count() }}</span>
     </div>
@@ -391,7 +381,7 @@
 {{-- ── 12. AUDIT LOG ────────────────────────────────────────────────────── --}}
 <div class="section">
     <div class="section-hd">
-        <div class="stage-icon bg-red-50">&#128269;</div>
+        <div class="stage-icon bg-neutral-200">&#128269;</div>
         <span class="section-title">Audit Trail</span>
         <span class="ml-auto badge badge-gray">{{ $encounter->audits->count() }}</span>
     </div>

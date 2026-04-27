@@ -84,6 +84,108 @@ class RegistrationTest extends TestCase
         $this->assertNotNull($patient->patient_id); // barcode generated
     }
 
+    public function test_new_patient_can_be_added_to_existing_household(): void
+    {
+        $this->actingAsRegistrar();
+
+        $householdId = 'HH-TEST-0001';
+        \Illuminate\Support\Facades\DB::table('households')->insert([
+            'household_id'  => $householdId,
+            'head_of_house' => 'Jane Household Head',
+            'created_at'    => now(),
+            'updated_at'    => now(),
+        ]);
+
+        $response = $this->post(route('encounters.start'), [
+            'full_name'      => 'New Household Member',
+            'gender'         => 'female',
+            'date_of_birth'  => '1993-08-11',
+            'phone_number'   => '+260971111111',
+            'household_id'   => $householdId,
+            'visit_type'     => 'OPD',
+            'priority_level' => 'normal',
+        ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('patients', [
+            'full_name'              => 'New Household Member',
+            'household_id'           => $householdId,
+            'household_head_of_house'=> 'Jane Household Head',
+            'relationship_to_head'   => 'Member',
+        ]);
+    }
+
+    public function test_add_household_mode_creates_household_and_sets_patient_as_head(): void
+    {
+        $this->actingAsRegistrar();
+
+        $response = $this->post(route('encounters.start'), [
+            'full_name'        => 'Leader Patient',
+            'gender'           => 'male',
+            'date_of_birth'    => '1980-01-02',
+            'nrc_number'       => '123456/80/1',
+            'phone_number'     => '+260972222222',
+            'create_household' => 1,
+            'visit_type'       => 'OPD',
+            'priority_level'   => 'normal',
+        ]);
+
+        $response->assertRedirect();
+
+        $patient = Patient::where('full_name', 'Leader Patient')->first();
+        $this->assertNotNull($patient);
+        $this->assertNotEmpty($patient->household_id);
+        $this->assertSame('Head', $patient->relationship_to_head);
+        $this->assertSame('Leader Patient', $patient->household_head_of_house);
+
+        $this->assertDatabaseHas('households', [
+            'household_id'  => $patient->household_id,
+            'head_of_house' => 'Leader Patient',
+            'phone_number'  => '+260972222222',
+            'nrc_number'    => '123456/80/1',
+        ]);
+    }
+
+    public function test_household_search_returns_matching_names(): void
+    {
+        $this->actingAsRegistrar();
+
+        \Illuminate\Support\Facades\DB::table('households')->insert([
+            [
+                'household_id'  => 'HH-0001',
+                'head_of_house' => 'Wilson Banda',
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ],
+            [
+                'household_id'  => 'HH-0002',
+                'head_of_house' => 'Wilson Phiri',
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ],
+            [
+                'household_id'  => 'HH-0003',
+                'head_of_house' => 'Wilsone Tembo',
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ],
+            [
+                'household_id'  => 'HH-0004',
+                'head_of_house' => 'Wilson Extra',
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ],
+        ]);
+
+        $response = $this->getJson(route('registration.households.search', ['q' => 'wilson']));
+
+        $response->assertOk()
+            ->assertJsonStructure(['households', 'count'])
+            ->assertJsonPath('count', 3)
+            ->assertJsonPath('households.0.name', 'Wilson Banda');
+    }
+
     // ─── 3. Registration record is saved ─────────────────────────────────────
 
     public function test_registration_record_is_saved(): void

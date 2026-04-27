@@ -80,20 +80,20 @@
     <div class="step-panel active" data-step="1">
         <div class="bg-white dark:bg-gray-800 rounded-b-2xl shadow-sm border border-t-0 border-gray-200 dark:border-gray-700 p-6 md:p-8 mb-6">
 
-            <h2 class="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-5">Personal Information</h2>
+            <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-300 mb-5">Personal Information</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                 {{-- First Name --}}
                 <div>
                     <label class="field-label">First Name <span class="req">*</span></label>
                     <input type="text" name="first_name" class="field-input" placeholder="Enter First Name" value="{{ old('first_name') }}" required>
-                    @error('first_name') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    @error('first_name') <p class="text-xs text-neutral-600 mt-1">{{ $message }}</p> @enderror
                 </div>
                 {{-- Surname --}}
                 <div>
                     <label class="field-label">Surname <span class="req">*</span></label>
                     <input type="text" name="surname" class="field-input" placeholder="Enter Surname" value="{{ old('surname') }}" required>
-                    @error('surname') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    @error('surname') <p class="text-xs text-neutral-600 mt-1">{{ $message }}</p> @enderror
                 </div>
                 {{-- Date of Birth --}}
                 <div>
@@ -103,7 +103,7 @@
                         <input type="checkbox" name="dob_estimated" value="1" {{ old('dob_estimated') ? 'checked' : '' }}>
                         Date of birth is estimated
                     </label>
-                    @error('date_of_birth') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    @error('date_of_birth') <p class="text-xs text-neutral-600 mt-1">{{ $message }}</p> @enderror
                 </div>
                 {{-- Sex --}}
                 <div>
@@ -113,7 +113,7 @@
                         <option value="Male" {{ old('gender') === 'Male' ? 'selected' : '' }}>Male</option>
                         <option value="Female" {{ old('gender') === 'Female' ? 'selected' : '' }}>Female</option>
                     </select>
-                    @error('gender') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    @error('gender') <p class="text-xs text-neutral-600 mt-1">{{ $message }}</p> @enderror
                 </div>
                 {{-- NRC --}}
                 <div>
@@ -123,7 +123,7 @@
                         <input type="checkbox" name="no_nrc" value="1" {{ old('no_nrc') ? 'checked' : '' }}>
                         Client does not have NRC
                     </label>
-                    @error('nrc_number') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    @error('nrc_number') <p class="text-xs text-neutral-600 mt-1">{{ $message }}</p> @enderror
                 </div>
                 {{-- Country --}}
                 <div>
@@ -138,7 +138,7 @@
                         <option value="CD" {{ old('country') === 'CD' ? 'selected' : '' }}>DR Congo</option>
                         <option value="Other" {{ old('country') === 'Other' ? 'selected' : '' }}>Other</option>
                     </select>
-                    @error('country') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    @error('country') <p class="text-xs text-neutral-600 mt-1">{{ $message }}</p> @enderror
                 </div>
                 {{-- Registration Date --}}
                 <div>
@@ -148,7 +148,7 @@
             </div>
 
             {{-- ── Contact Information ── --}}
-            <h2 class="text-lg font-bold text-amber-800 dark:text-amber-400 mt-10 mb-5">Contact Information</h2>
+            <h2 class="text-lg font-bold text-neutral-800 dark:text-neutral-400 mt-10 mb-5">Contact Information</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                 {{-- Primary phone --}}
@@ -168,7 +168,7 @@
                         <div>
                             <label class="field-label">Cellphone Number <span class="req">*</span></label>
                             <input type="tel" name="cellphone" class="field-input" placeholder="Cellphone Number" value="{{ old('cellphone') }}">
-                            @error('cellphone') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('cellphone') <p class="text-xs text-neutral-600 mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="field-label">Code</label>
@@ -249,7 +249,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-b-2xl shadow-sm border border-t-0 border-gray-200 dark:border-gray-700 p-6 md:p-8 mb-6">
 
             {{-- Marital Status & Spouse Details --}}
-            <h2 class="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-5">Marital Status & Spouse Details</h2>
+            <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-300 mb-5">Marital Status & Spouse Details</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 mb-10">
                 <div class="md:col-span-2">
@@ -274,7 +274,7 @@
             </div>
 
             {{-- Place of Birth & Religious Denomination --}}
-            <h2 class="text-lg font-bold text-amber-800 dark:text-amber-400 mb-5">Place of Birth & Religious Denomination</h2>
+            <h2 class="text-lg font-bold text-neutral-800 dark:text-neutral-400 mb-5">Place of Birth & Religious Denomination</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 mb-10">
                 <div>
@@ -340,7 +340,7 @@
             </div>
 
             {{-- Education & Employment --}}
-            <h2 class="text-lg font-bold text-amber-800 dark:text-amber-400 mb-5">Education & Employment</h2>
+            <h2 class="text-lg font-bold text-neutral-800 dark:text-neutral-400 mb-5">Education & Employment</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                 <div>
@@ -367,7 +367,7 @@
     <div class="step-panel" data-step="3">
         <div class="bg-white dark:bg-gray-800 rounded-b-2xl shadow-sm border border-t-0 border-gray-200 dark:border-gray-700 p-6 md:p-8 mb-6">
 
-            <h2 class="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-5">Biometrics</h2>
+            <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-300 mb-5">Biometrics</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                 <div>
@@ -409,10 +409,10 @@
             <button type="button" id="btn-prev" class="hidden px-6 py-2.5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-semibold transition">
                 Previous
             </button>
-            <button type="button" id="btn-next" class="px-8 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition shadow-sm">
+            <button type="button" id="btn-next" class="px-8 py-2.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-semibold transition shadow-sm">
                 Next
             </button>
-            <button type="submit" id="btn-submit" class="hidden px-8 py-2.5 rounded-full bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition shadow-sm">
+            <button type="submit" id="btn-submit" class="hidden px-8 py-2.5 rounded-full bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-semibold transition shadow-sm">
                 Register Patient
             </button>
         </div>

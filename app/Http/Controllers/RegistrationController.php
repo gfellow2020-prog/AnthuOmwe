@@ -12,6 +12,7 @@ use App\Models\Encounter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class RegistrationController extends Controller
@@ -37,7 +38,22 @@ class RegistrationController extends Controller
             ->latest('started_at')
             ->paginate(15);
 
-        return view('registration.index', compact('activeEncounters'));
+        $selectedHouseholdOption = null;
+
+        if (old('household_id')) {
+            $selectedHouseholdOption = DB::table('households')
+                ->select('household_id', 'head_of_house')
+                ->where('household_id', old('household_id'))
+                ->first();
+        }
+
+        $villages = DB::table('villages')
+            ->select('name')
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
+
+        return view('registration.index', compact('activeEncounters', 'selectedHouseholdOption', 'villages'));
     }
 
     /**
@@ -49,11 +65,13 @@ class RegistrationController extends Controller
         $request->validate([
             'q'             => ['required', 'string', 'min:2', 'max:100'],
             'date_of_birth' => ['nullable', 'date'],
+            'sex'           => ['nullable', 'string', 'in:male,female'],
         ]);
 
         $patients = $this->searchAction->handle(
             query:       $request->input('q'),
             dateOfBirth: $request->input('date_of_birth'),
+            sex:         $request->input('sex'),
         );
 
         return response()->json([
@@ -68,6 +86,65 @@ class RegistrationController extends Controller
             ]),
             'count' => $patients->count(),
         ]);
+    }
+
+    /**
+     * GET /registration/search-households
+     * Live household search for the registration form.
+     */
+    public function searchHouseholds(Request $request): JsonResponse
+    {
+        $request->validate([
+            'q' => ['required', 'string', 'min:1', 'max:100'],
+        ]);
+
+        $query = trim((string) $request->input('q'));
+        $like = '%' . $query . '%';
+
+        $households = DB::table('households')
+            ->select('household_id', 'head_of_house')
+            ->where(function ($builder) use ($like) {
+                $builder->where('head_of_house', 'like', $like)
+                    ->orWhere('household_id', 'like', $like);
+            })
+            ->orderBy('head_of_house')
+            ->orderBy('household_id')
+            ->limit(3)
+            ->get();
+
+        return response()->json([
+            'households' => $households->map(fn ($household) => [
+                'id' => $household->household_id,
+                'name' => $household->head_of_house ?: 'Unnamed Household',
+                'label' => ($household->head_of_house ?: 'Unnamed Household') . ' (' . $household->household_id . ')',
+            ]),
+            'count' => $households->count(),
+        ]);
+    }
+
+    /**
+     * POST /registration/villages
+     * Add a new village to the villages table and return it for use in the form.
+     */
+    public function addVillage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:villages,name'],
+        ], [
+            'name.required' => 'Village name is required.',
+            'name.unique'   => 'That village already exists in the list.',
+            'name.max'      => 'Village name must not exceed 100 characters.',
+        ]);
+
+        $name = trim((string) $request->input('name'));
+
+        DB::table('villages')->insert([
+            'name'       => $name,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['name' => $name], 201);
     }
 
     /**
