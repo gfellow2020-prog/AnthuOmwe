@@ -8,6 +8,7 @@ use App\Enums\QueueTransitionStatus;
 use App\Exceptions\Encounter\EncounterLockedException;
 use App\Models\Encounter;
 use App\Models\Patient;
+use App\Models\PharmacyDispense;
 use App\Models\PharmacyPrescription;
 use App\Models\PharmacyPrescriptionItem;
 use App\Models\ScreeningRecord;
@@ -277,5 +278,57 @@ class PharmacyTest extends TestCase
             'encounter_id' => $encounter->id,
             'status'       => 'dispensed',
         ]);
+    }
+
+    public function test_create_prescription_replaces_existing_active_prescription(): void
+    {
+        $user      = $this->actingAsPharmacist();
+        $encounter = $this->makeEncounterAtPharmacyQueued($user);
+        $oldPrescription = $encounter->prescription;
+
+        app(\App\Actions\Encounter\CreatePrescriptionAction::class)->handle(
+            $encounter,
+            [
+                'items' => [
+                    [
+                        'drug_name' => 'Paracetamol',
+                        'dose' => '1 tablet',
+                        'frequency' => 'TDS',
+                        'duration' => '3 days',
+                        'quantity_prescribed' => 9,
+                    ],
+                ],
+            ],
+            $user->id,
+        );
+
+        $this->assertSame('cancelled', $oldPrescription->fresh()->status);
+        $this->assertSame(1, PharmacyPrescription::where('encounter_id', $encounter->id)->where('status', 'active')->count());
+    }
+
+    public function test_medication_cannot_be_dispensed_twice_for_same_encounter(): void
+    {
+        $user      = $this->actingAsPharmacist();
+        $encounter = $this->makeEncounterAtPharmacyInProgress($user);
+
+        $this->dispense($encounter);
+
+        try {
+            app(\App\Actions\Encounter\DispenseMedicationAction::class)->handle(
+                $encounter->fresh(),
+                [
+                    'items' => [
+                        ['drug_name' => 'Paracetamol', 'quantity_dispensed' => 10],
+                    ],
+                ],
+                $user->id,
+            );
+
+            $this->fail('Expected duplicate dispensing to be rejected.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Medication has already been dispensed for this encounter.', $exception->getMessage());
+        }
+
+        $this->assertSame(1, PharmacyDispense::where('encounter_id', $encounter->id)->count());
     }
 }

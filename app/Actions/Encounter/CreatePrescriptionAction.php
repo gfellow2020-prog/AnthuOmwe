@@ -40,6 +40,15 @@ class CreatePrescriptionAction
     ): PharmacyPrescription {
         return DB::transaction(function () use ($encounter, $data, $prescribedById, $screeningRecord): PharmacyPrescription {
 
+            $activePrescriptions = PharmacyPrescription::where('encounter_id', $encounter->id)
+                ->where('status', 'active')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($activePrescriptions as $activePrescription) {
+                $activePrescription->update(['status' => 'cancelled']);
+            }
+
             $prescription = PharmacyPrescription::create([
                 'encounter_id'        => $encounter->id,
                 'patient_id'          => $encounter->patient_id,

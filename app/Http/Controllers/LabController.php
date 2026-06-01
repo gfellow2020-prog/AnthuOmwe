@@ -12,6 +12,7 @@ use App\Http\Requests\LabRequestStoreRequest;
 use App\Http\Requests\LabResultStoreRequest;
 use App\Models\Encounter;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class LabController extends Controller
@@ -87,19 +88,21 @@ class LabController extends Controller
 
         $data = $request->validated();
 
-        if (! empty($data['items'])) {
-            foreach ($data['items'] as $item) {
-                $encounter->labRequest->items()->create($item + ['status' => 'pending']);
+        DB::transaction(function () use ($data, $encounter): void {
+            if (! empty($data['items'])) {
+                foreach ($data['items'] as $item) {
+                    $encounter->labRequest->items()->create($item + ['status' => 'pending']);
+                }
             }
-        }
 
-        if (! empty($data['samples'])) {
-            $this->samplesAction->handle(
-                $encounter->labRequest,
-                ['samples' => $data['samples']],
-                auth()->id(),
-            );
-        }
+            if (! empty($data['samples'])) {
+                $this->samplesAction->handle(
+                    $encounter->labRequest,
+                    ['samples' => $data['samples']],
+                    auth()->id(),
+                );
+            }
+        });
 
         return redirect()
             ->route('lab.show', $encounter)
@@ -141,20 +144,22 @@ class LabController extends Controller
             return back()->with('error', 'No lab request found.');
         }
 
-        // Save the submitted results first
-        $this->resultsAction->handle(
-            $encounter->labRequest,
-            ['results' => $request->validated()['results']],
-            auth()->id(),
-        );
+        DB::transaction(function () use ($encounter, $request): void {
+            // Save the submitted results first
+            $this->resultsAction->handle(
+                $encounter->labRequest,
+                ['results' => $request->validated()['results']],
+                auth()->id(),
+            );
 
-        $encounter->refresh();
+            $encounter->refresh();
 
-        $this->completeAction->handle(
-            encounter:  $encounter,
-            labTechId:  auth()->id(),
-            notes:      $request->input('notes'),
-        );
+            $this->completeAction->handle(
+                encounter:  $encounter,
+                labTechId:  auth()->id(),
+                notes:      $request->input('notes'),
+            );
+        });
 
         return redirect()
             ->route('lab.queue')

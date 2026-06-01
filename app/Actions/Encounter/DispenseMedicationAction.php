@@ -47,6 +47,10 @@ class DispenseMedicationAction
 
             $encounter->loadMissing('prescription');
 
+            if ($encounter->dispense()->exists()) {
+                throw new \RuntimeException('Medication has already been dispensed for this encounter.');
+            }
+
             $dispense = PharmacyDispense::create([
                 'encounter_id'              => $encounter->id,
                 'patient_id'                => $encounter->patient_id,

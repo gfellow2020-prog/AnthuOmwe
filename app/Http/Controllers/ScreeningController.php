@@ -12,6 +12,7 @@ use App\Enums\EncounterStatus;
 use App\Http\Requests\ScreeningRequest;
 use App\Models\Encounter;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
@@ -105,35 +106,47 @@ class ScreeningController extends Controller
     {
         $data = $request->validated();
 
-        // Always save / refresh the screening record first
-        $screeningRecord = $this->recordAction->handle(
-            encounter:   $encounter,
-            data:        $data,
-            clinicianId: auth()->id(),
-        );
-
-        // Save prescription items if submitted
-        $prescriptionItems = [];
-        if (!empty($data['prescriptions'])) {
-            $decoded = json_decode($data['prescriptions'], true);
-            if (is_array($decoded) && count($decoded) > 0) {
-                $prescriptionItems = $decoded;
-            }
-        }
-        if (count($prescriptionItems) > 0) {
-            $this->prescriptionAction->handle(
-                encounter:       $encounter,
-                data:            ['notes' => null, 'items' => $prescriptionItems],
-                prescribedById:  auth()->id(),
-                screeningRecord: $screeningRecord,
+        return DB::transaction(function () use ($data, $encounter): RedirectResponse {
+            // Always save / refresh the screening record first
+            $screeningRecord = $this->recordAction->handle(
+                encounter:   $encounter,
+                data:        $data,
+                clinicianId: auth()->id(),
             );
-        }
 
-        $encounter->refresh();
-        $labRequested = (bool) ($data['lab_requested'] ?? false);
+            // Save prescription items if submitted
+            $prescriptionItems = [];
+            if (! empty($data['prescriptions'])) {
+                $decoded = json_decode($data['prescriptions'], true);
+                if (is_array($decoded) && count($decoded) > 0) {
+                    $prescriptionItems = $decoded;
+                }
+            }
+            if (count($prescriptionItems) > 0) {
+                $this->prescriptionAction->handle(
+                    encounter:       $encounter,
+                    data:            ['notes' => null, 'items' => $prescriptionItems],
+                    prescribedById:  auth()->id(),
+                    screeningRecord: $screeningRecord,
+                );
+            }
 
-        if ($labRequested) {
-            $this->queueToLabAction->handle(
+            $encounter->refresh();
+            $labRequested = (bool) ($data['lab_requested'] ?? false);
+
+            if ($labRequested) {
+                $this->queueToLabAction->handle(
+                    encounter:   $encounter,
+                    clinicianId: auth()->id(),
+                    notes:       $data['notes'] ?? null,
+                );
+
+                return redirect()
+                    ->route('screening.queue')
+                    ->with('success', "Encounter {$encounter->encounter_number} queued to Lab.");
+            }
+
+            $this->queueToPharmacyAction->handle(
                 encounter:   $encounter,
                 clinicianId: auth()->id(),
                 notes:       $data['notes'] ?? null,
@@ -141,17 +154,7 @@ class ScreeningController extends Controller
 
             return redirect()
                 ->route('screening.queue')
-                ->with('success', "Encounter {$encounter->encounter_number} queued to Lab.");
-        }
-
-        $this->queueToPharmacyAction->handle(
-            encounter:   $encounter,
-            clinicianId: auth()->id(),
-            notes:       $data['notes'] ?? null,
-        );
-
-        return redirect()
-            ->route('screening.queue')
-            ->with('success', "Encounter {$encounter->encounter_number} queued directly to Pharmacy.");
+                ->with('success', "Encounter {$encounter->encounter_number} queued directly to Pharmacy.");
+        });
     }
 }
