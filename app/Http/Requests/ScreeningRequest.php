@@ -7,6 +7,15 @@ use Illuminate\Validation\Validator;
 
 class ScreeningRequest extends BaseEncounterRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (is_array($this->input('prescriptions'))) {
+            $this->merge([
+                'prescriptions' => json_encode($this->input('prescriptions')),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
