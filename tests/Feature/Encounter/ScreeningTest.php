@@ -187,6 +187,29 @@ class ScreeningTest extends TestCase
         $this->assertSame(['fever', 'fatigue'], $record->tb_symptoms);
     }
 
+    public function test_screening_prescription_json_requires_complete_items(): void
+    {
+        $clinician = $this->actingAsClinician();
+        $encounter = $this->makeEncounterAtScreeningInProgress($clinician);
+
+        $response = $this->post(route('screening.complete', $encounter), [
+            'complaints' => 'Headache and fever',
+            'lab_requested' => false,
+            'prescriptions' => json_encode([
+                ['drug_name' => 'Paracetamol', 'dose' => '1 tablet'],
+            ]),
+        ]);
+
+        $response->assertSessionHasErrors('prescriptions');
+        $this->assertDatabaseMissing('pharmacy_prescriptions', [
+            'encounter_id' => $encounter->id,
+        ]);
+
+        $encounter->refresh();
+        $this->assertSame(EncounterStage::Screening, $encounter->current_stage);
+        $this->assertSame(EncounterStatus::InProgress, $encounter->current_status);
+    }
+
     // ─── 4. Encounter can be queued to lab ────────────────────────────────────
 
     public function test_encounter_can_be_queued_to_lab(): void

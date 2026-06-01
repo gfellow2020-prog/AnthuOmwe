@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Support\Facades\Validator as ValidatorFacade;
+use Illuminate\Validation\Validator;
+
 class ScreeningRequest extends BaseEncounterRequest
 {
     public function rules(): array
@@ -67,5 +70,63 @@ class ScreeningRequest extends BaseEncounterRequest
             'staff_assignments.*.participation_type' => ['nullable', 'string', 'max:60'],
             'staff_assignments.*.notes'     => ['nullable', 'string', 'max:500'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $rawPrescriptions = $this->input('prescriptions');
+
+            if ($rawPrescriptions === null || $rawPrescriptions === '') {
+                return;
+            }
+
+            if (! is_string($rawPrescriptions)) {
+                return;
+            }
+
+            $decodedPrescriptions = json_decode($rawPrescriptions, true);
+
+            if (
+                json_last_error() !== JSON_ERROR_NONE
+                || ! is_array($decodedPrescriptions)
+                || ! array_is_list($decodedPrescriptions)
+            ) {
+                $validator->errors()->add('prescriptions', 'The prescriptions field must contain a valid JSON array.');
+
+                return;
+            }
+
+            if ($decodedPrescriptions === []) {
+                return;
+            }
+
+            $prescriptionValidator = ValidatorFacade::make(
+                ['items' => $decodedPrescriptions],
+                [
+                    'items' => ['array', 'min:1'],
+                    'items.*.drug_name' => ['required', 'string', 'max:255'],
+                    'items.*.strength' => ['nullable', 'string', 'max:100'],
+                    'items.*.formulation' => ['nullable', 'string', 'max:100'],
+                    'items.*.dose' => ['required', 'string', 'max:100'],
+                    'items.*.item_per_dose' => ['nullable', 'integer', 'min:0'],
+                    'items.*.frequency' => ['required', 'string', 'max:100'],
+                    'items.*.time_per' => ['nullable', 'string', 'max:100'],
+                    'items.*.frequency_unit' => ['nullable', 'string', 'max:100'],
+                    'items.*.duration' => ['required', 'string', 'max:100'],
+                    'items.*.duration_unit' => ['nullable', 'string', 'max:100'],
+                    'items.*.start_date' => ['nullable', 'date'],
+                    'items.*.end_date' => ['nullable', 'date'],
+                    'items.*.quantity_prescribed' => ['required', 'integer', 'min:1'],
+                    'items.*.route' => ['nullable', 'string', 'max:100'],
+                    'items.*.is_passer_by' => ['nullable', 'boolean'],
+                    'items.*.instructions' => ['nullable', 'string', 'max:500'],
+                ],
+            );
+
+            if ($prescriptionValidator->fails()) {
+                $validator->errors()->add('prescriptions', 'Each prescription item must include a drug name, dose, frequency, duration, and quantity.');
+            }
+        });
     }
 }

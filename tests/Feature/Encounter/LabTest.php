@@ -6,6 +6,7 @@ use App\Enums\EncounterStage;
 use App\Enums\EncounterStatus;
 use App\Enums\QueueTransitionStatus;
 use App\Models\Encounter;
+use App\Models\LabRequest;
 use App\Models\Patient;
 use App\Models\ScreeningRecord;
 use App\Models\User;
@@ -197,6 +198,57 @@ class LabTest extends TestCase
         ]);
 
         $this->assertEquals(1, $lr->fresh()->results()->count());
+    }
+
+    public function test_lab_result_item_must_belong_to_current_lab_request(): void
+    {
+        $tech      = $this->actingAsLabTech();
+        $encounter = $this->makeEncounterAtLabInProgress($tech);
+
+        $otherPatient = Patient::create([
+            'patient_id'    => 'P00000031',
+            'full_name'     => 'Foreign Patient',
+            'gender'        => 'female',
+            'date_of_birth' => '1990-01-01',
+        ]);
+
+        $otherEncounter = Encounter::create([
+            'patient_id'       => $otherPatient->id,
+            'encounter_number' => 'ENC-20260419-00031',
+            'visit_type'       => 'OPD',
+            'priority_level'   => 'normal',
+            'current_stage'    => EncounterStage::Lab,
+            'current_status'   => EncounterStatus::InProgress,
+            'started_by'       => $tech->id,
+            'started_at'       => now(),
+            'is_locked'        => false,
+        ]);
+
+        $otherLabRequest = LabRequest::create([
+            'encounter_id'    => $otherEncounter->id,
+            'patient_id'      => $otherPatient->id,
+            'requested_by'    => $tech->id,
+            'request_number'  => 'LAB-20260419-0002',
+            'status'          => 'in_progress',
+            'requested_at'    => now(),
+        ]);
+
+        $foreignItem = $otherLabRequest->items()->create([
+            'test_name' => 'Full Blood Count',
+            'status'    => 'pending',
+        ]);
+
+        $response = $this->post(route('lab.results', $encounter), [
+            'results' => [
+                [
+                    'lab_request_item_id' => $foreignItem->id,
+                    'result_value' => '10.2 g/dL',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('results.0.lab_request_item_id');
+        $this->assertSame(0, $encounter->labRequest->fresh()->results()->count());
     }
 
     // ─── 6. Encounter is queued back to Screening Review ─────────────────────

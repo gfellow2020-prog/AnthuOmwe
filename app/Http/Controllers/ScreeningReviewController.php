@@ -11,6 +11,7 @@ use App\Enums\EncounterStatus;
 use App\Http\Requests\ScreeningReviewRequest;
 use App\Models\Encounter;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ScreeningReviewController extends Controller
@@ -81,34 +82,36 @@ class ScreeningReviewController extends Controller
     {
         $data = $request->validated();
 
-        // 1. Save the post-lab review screening record
-        $reviewRecord = $this->reviewAction->handle($encounter, [
-            'final_diagnosis'       => $data['final_diagnosis'],
-            'clinical_findings'     => $data['clinical_findings']    ?? null,
-            'physical_examination'  => $data['physical_examination'] ?? null,
-            'assessment_notes'      => $data['assessment_notes']     ?? null,
-            'plan'                  => $data['plan']                 ?? null,
-            'review_notes'          => $data['review_notes']         ?? null,
-        ], auth()->id());
+        return DB::transaction(function () use ($data, $encounter): RedirectResponse {
+            // 1. Save the post-lab review screening record
+            $reviewRecord = $this->reviewAction->handle($encounter, [
+                'final_diagnosis'       => $data['final_diagnosis'],
+                'clinical_findings'     => $data['clinical_findings']    ?? null,
+                'physical_examination'  => $data['physical_examination'] ?? null,
+                'assessment_notes'      => $data['assessment_notes']     ?? null,
+                'plan'                  => $data['plan']                 ?? null,
+                'review_notes'          => $data['review_notes']         ?? null,
+            ], auth()->id());
 
-        // 2. Create prescription
-        $this->prescriptionAction->handle(
-            encounter:       $encounter,
-            data:            [
-                'notes' => $data['prescription_notes'] ?? null,
-                'items' => $data['items'],
-            ],
-            prescribedById:  auth()->id(),
-            screeningRecord: $reviewRecord,
-        );
+            // 2. Create prescription
+            $this->prescriptionAction->handle(
+                encounter:       $encounter,
+                data:            [
+                    'notes' => $data['prescription_notes'] ?? null,
+                    'items' => $data['items'],
+                ],
+                prescribedById:  auth()->id(),
+                screeningRecord: $reviewRecord,
+            );
 
-        $encounter->refresh();
+            $encounter->refresh();
 
-        // 3. Queue to pharmacy
-        $this->pharmacyAction->handle($encounter, auth()->id());
+            // 3. Queue to pharmacy
+            $this->pharmacyAction->handle($encounter, auth()->id());
 
-        return redirect()
-            ->route('screening-review.queue')
-            ->with('success', "Encounter {$encounter->encounter_number} queued to Pharmacy.");
+            return redirect()
+                ->route('screening-review.queue')
+                ->with('success', "Encounter {$encounter->encounter_number} queued to Pharmacy.");
+        });
     }
 }
